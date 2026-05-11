@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MediAssist — Health Query Chatbot</title>
+
+  <!-- Tabler Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+
+  <style>
+    /* ── Reset & Base ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green-50:  #E1F5EE;
+      --green-100: #9FE1CB;
+      --green-600: #0F6E56;
+      --green-700: #1D9E75;
+      --blue-50:   #E6F1FB;
+      --blue-100:  #B5D4F4;
+      --blue-700:  #185FA5;
+      --red-50:    #FCEBEB;
+      --red-100:   #F7C1C1;
+      --red-700:   #A32D2D;
+      --gray-50:   #F8F9FA;
+      --gray-100:  #F1EFE8;
+      --gray-200:  #E2E0D8;
+      --gray-400:  #888780;
+      --gray-700:  #444441;
+      --gray-900:  #1A1A18;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --font: 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'Consolas', monospace;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--gray-100);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px 12px;
+      color: var(--gray-900);
+    }
+
+    /* ── Page Header ──────────────────────────────────── */
+    .page-header {
+      width: 100%;
+      max-width: 760px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      background: var(--green-700);
+      display: flex; align-items: center; justify-content: center;
+      color: white;
+      font-size: 20px;
+    }
+
+    .logo-text h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--gray-900);
+      letter-spacing: -0.3px;
+    }
+
+    .logo-text p {
+      font-size: 12px;
+      color: var(--gray-400);
+    }
+
+    .badges {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 10px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .badge-green {
+      background: var(--green-50);
+      color: var(--green-600);
+      border: 1px solid var(--green-100);
+    }
+
+    .badge-blue {
+      background: var(--blue-50);
+      color: var(--blue-700);
+      border: 1px solid var(--blue-100);
+    }
+
+    /* ── App Container ────────────────────────────────── */
+    .app {
+      width: 100%;
+      max-width: 760px;
+      background: white;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--gray-200);
+      display: flex;
+      flex-direction: column;
+      height: 72vh;
+      min-height: 480px;
+      max-height: 700px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+    }
+
+    /* ── Chat Header ──────────────────────────────────── */
+    .chat-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--gray-200);
+      background: var(--gray-50);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .chat-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: var(--green-50);
+      border: 1px solid var(--green-100);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px;
+    }
+
+    .chat-header h2 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gray-900);
+    }
+
+    .status {
+      font-size: 12px;
+      color: var(--green-600);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .status::before {
+      content: '';
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green-700);
+    }
+
+    .clear-btn {
+      font-size: 12px;
+      padding: 5px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--gray-200);
+      background: white;
+      color: var(--gray-400);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s;
+    }
+
+    .clear-btn:hover {
+      border-color: var(--red-100);
+      color: var(--red-700);
+    }
+
+    /* ── Safety Banner ────────────────────────────────── */
+    .safety-banner {
+      padding: 8px 18px;
+      background: var(--blue-50);
+      border-bottom: 1px solid var(--blue-100);
+      font-size: 12px;
+      color: var(--blue-700);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    /* ── Messages Area ────────────────────────────────── */
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      scroll-behavior: smooth;
+    }
+
+    .messages::-webkit-scrollbar { width: 4px; }
+    .messages::-webkit-scrollbar-track { background: transparent; }
+    .messages::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 4px; }
+
+    /* ── Message Bubbles ──────────────────────────────── */
+    .msg {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      animation: fadeUp 0.2s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    .msg.user {
+      flex-direction: row-reverse;
+      align-self: flex-end;
+      max-width: 80%;
+    }
+
+    .msg.assistant {
+      align-self: flex-start;
+      max-width: 84%;
+    }
+
+    .msg-avatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      margin-top: 2px;
+    }
+
+    .msg.user .msg-avatar {
+      background: var(--green-50);
+      border: 1px solid var(--green-100);
+      color: var(--green-600);
+    }
+
+    .msg.assistant .msg-avatar {
+      background: var(--gray-100);
+      border: 1px solid var(--gray-200);
+      color: var(--gray-400);
+    }
+
+    .bubble {
+      padding: 11px 15px;
+      font-size: 14px;
+      line-height: 1.65;
+      word-break: break-word;
+    }
+
+    .msg.user .bubble {
+      background: var(--green-700);
+      color: white;
+      border-radius: 16px 4px 16px 16px;
+    }
+
+    .msg.assistant .bubble {
+      background: var(--gray-50);
+      color: var(--gray-900);
+      border: 1px solid var(--gray-200);
+      border-radius: 4px 16px 16px 16px;
+    }
+
+    /* typing indicator */
+    .typing-dots {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 14px 15px;
+    }
+
+    .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--green-700);
+      animation: blink 1.3s infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes blink {
+      0%, 60%, 100% { opacity: 0.3; transform: scale(0.9); }
+      30%            { opacity: 1;   transform: scale(1.1); }
+    }
+
+    /* ── Example Chips ────────────────────────────────── */
+    .examples-area {
+      padding: 4px 20px 12px;
+    }
+
+    .examples-label {
+      font-size: 11px;
+      color: var(--gray-400);
+      margin-bottom: 7px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .chip {
+      font-size: 12.5px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--gray-200);
+      background: white;
+      color: var(--gray-700);
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .chip:hover {
+      border-color: var(--green-100);
+      background: var(--green-50);
+      color: var(--green-600);
+    }
+
+    /* ── Input Area ───────────────────────────────────── */
+    .input-area {
+      padding: 12px 16px;
+      border-top: 1px solid var(--gray-200);
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      background: white;
+    }
+
+    textarea {
+      flex: 1;
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--gray-900);
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      padding: 9px 13px;
+      resize: none;
+      min-height: 40px;
+      max-height: 120px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    textarea:focus {
+      border-color: var(--green-700);
+      box-shadow: 0 0 0 3px var(--green-50);
+    }
+
+    textarea::placeholder { color: var(--gray-400); }
+
+    .send-btn {
+      width: 40px; height: 40px;
+      flex-shrink: 0;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: var(--green-700);
+      color: white;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    .send-btn:disabled { opacity: 0.35; cursor: default; }
+    .send-btn:not(:disabled):hover { opacity: 0.88; }
+    .send-btn:not(:disabled):active { transform: scale(0.95); }
+
+    /* ── Error Toast ──────────────────────────────────── */
+    .error-toast {
+      margin: 0 20px 10px;
+      padding: 9px 14px;
+      background: var(--red-50);
+      border: 1px solid var(--red-100);
+      border-radius: var(--radius-sm);
+      color: var(--red-700);
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    /* ── Footer ───────────────────────────────────────── */
+    .footer {
+      margin-top: 12px;
+      font-size: 11.5px;
+      color: var(--gray-400);
+      text-align: center;
+    }
+
+    .footer a {
+      color: var(--gray-400);
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="logo">
+      <div class="logo-icon"><i class="ti ti-stethoscope"></i></div>
+      <div class="logo-text">
+        <h1>MediAssist</h1>
+        <p>General Health Query Chatbot</p>
+      </div>
+    </div>
+    <div class="badges">
+      <span class="badge badge-green"><i class="ti ti-shield-check" style="font-size:11px;"></i> Safety Filtered</span>
+      <span class="badge badge-blue"><i class="ti ti-brain" style="font-size:11px;"></i> Claude AI</span>
+    </div>
+  </div>
+
+  <!-- Chatbot App -->
+  <div class="app" id="app">
+
+    <!-- Chat Header -->
+    <div class="chat-header">
+      <div class="chat-header-left">
+        <div class="avatar">🩺</div>
+        <div>
+          <h2>MediAssist AI</h2>
+          <span class="status">Online · General info only</span>
+        </div>
+      </div>
+      <button class="clear-btn" id="clearBtn">
+        <i class="ti ti-refresh"></i> New chat
+      </button>
+    </div>
+
+    <!-- Safety Banner -->
+    <div class="safety-banner" role="note">
+      <i class="ti ti-alert-circle" style="font-size:14px; flex-shrink:0;"></i>
+      <span>For emergencies call <strong>115</strong> (PK) · <strong>911</strong> (US) · <strong>999</strong> (UK). This is general information, not medical advice.</span>
+    </div>
+
+    <!-- Messages -->
+    <div class="messages" id="messages" role="log" aria-live="polite">
+      <div class="msg assistant">
+        <div class="msg-avatar"><i class="ti ti-heart-rate-monitor"></i></div>
+        <div class="bubble">
+          Hello! I'm MediAssist, your general health information assistant. I can help with questions about symptoms, medications, and general wellness. 🌿<br><br>
+          Please remember: I provide general information only — always consult a qualified doctor for diagnosis or treatment. How can I help you today?
+        </div>
+      </div>
+    </div>
+
+    <!-- Example Queries -->
+    <div class="examples-area" id="examplesArea">
+      <div class="examples-label">Try asking</div>
+      <div class="chips">
+        <button class="chip"><i class="ti ti-virus" style="font-size:13px;"></i> What causes a sore throat?</button>
+        <button class="chip"><i class="ti ti-pill" style="font-size:13px;"></i> Is paracetamol safe for children?</button>
+        <button class="chip"><i class="ti ti-heart" style="font-size:13px;"></i> How to manage high blood pressure?</button>
+        <button class="chip"><i class="ti ti-droplet" style="font-size:13px;"></i> Signs of dehydration?</button>
+        <button class="chip"><i class="ti ti-moon" style="font-size:13px;"></i> Why do I feel tired all the time?</button>
+      </div>
+    </div>
+
+    <!-- Error Area -->
+    <div id="errorArea"></div>
+
+    <!-- Input -->
+    <div class="input-area">
+      <textarea
+        id="inputBox"
+        placeholder="Ask a health question… (Press Enter to send)"
+        rows="1"
+        aria-label="Type your health question"
+      ></textarea>
+      <button class="send-btn" id="sendBtn" disabled aria-label="Send message">
+        <i class="ti ti-send"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    Powered by Claude AI · For educational purposes only ·
+    Always consult a qualified healthcare professional for medical decisions.
+  </div>
+
+
+  <script>
+    /* ────────────────────────────────────────────────────────────────
+       HEALTH CHATBOT — FRONTEND JAVASCRIPT
+       
+       This script:
+       1. Manages conversation history in memory (array of {role, content})
+       2. Sends each message to our Flask /chat endpoint (not directly to Anthropic)
+       3. Displays responses as chat bubbles with typing animation
+    ─────────────────────────────────────────────────────────────── */
+
+    const messagesEl  = document.getElementById("messages");
+    const inputEl     = document.getElementById("inputBox");
+    const sendBtn     = document.getElementById("sendBtn");
+    const errorArea   = document.getElementById("errorArea");
+    const examplesArea = document.getElementById("examplesArea");
+    const clearBtn    = document.getElementById("clearBtn");
+
+    // Full conversation history — sent to backend on every request
+    // so the model maintains context across multiple turns.
+    let conversationHistory = [];
+    let isLoading = false;
+
+    /* ── Render a message bubble ─────────────────────────── */
+    function addMessage(role, content, isTyping = false) {
+      const wrapper = document.createElement("div");
+      wrapper.className = `msg ${role}`;
+
+      const avatarEl = document.createElement("div");
+      avatarEl.className = "msg-avatar";
+      avatarEl.setAttribute("aria-hidden", "true");
+      avatarEl.innerHTML = role === "user"
+        ? '<i class="ti ti-user"></i>'
+        : '<i class="ti ti-heart-rate-monitor"></i>';
+
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+
+      if (isTyping) {
+        // Show animated dots while waiting for API response
+        bubble.innerHTML = `<div class="typing-dots">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>`;
+        wrapper.id = "typingMsg";
+      } else {
+        // Convert newlines to <br> for proper paragraph spacing
+        bubble.innerHTML = content.replace(/\n/g, "<br>");
+      }
+
+      wrapper.appendChild(avatarEl);
+      wrapper.appendChild(bubble);
+      messagesEl.appendChild(wrapper);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+
+      return wrapper;
+    }
+
+    /* ── Show/hide error toast ──────────────────────────── */
+    function showError(msg) {
+      errorArea.innerHTML = `
+        <div class="error-toast">
+          <i class="ti ti-alert-circle" style="font-size:15px; flex-shrink:0;"></i>
+          ${msg}
+        </div>`;
+      setTimeout(() => { errorArea.innerHTML = ""; }, 7000);
+    }
+
+    /* ── Core send function ─────────────────────────────── */
+    async function sendMessage(userText) {
+      userText = userText.trim();
+      if (!userText || isLoading) return;
+
+      // Hide example chips after first message
+      examplesArea.style.display = "none";
+      errorArea.innerHTML = "";
+
+      // Show user bubble
+      addMessage("user", userText);
+
+      // Add to history BEFORE the API call
+      conversationHistory.push({ role: "user", content: userText });
+
+      // Lock input
+      isLoading = true;
+      sendBtn.disabled = true;
+      inputEl.disabled = true;
+
+      // Show typing indicator
+      const typingEl = addMessage("assistant", "", true);
+
+      try {
+        // ── Send to our Flask backend ──────────────────────
+        // The backend will: (1) run safety filter, (2) call Anthropic API
+        const res = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messages: conversationHistory })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || `Server error ${res.status}`);
+        }
+
+        // ── Display response ───────────────────────────────
+        typingEl.remove();
+        const replyText = data.response || "I couldn't generate a response. Please try again.";
+        addMessage("assistant", replyText);
+
+        // Add assistant reply to history for next turn's context
+        conversationHistory.push({ role: "assistant", content: replyText });
+
+        // Note if the response was safety-filtered
+        if (data.safety_filtered) {
+          console.log("[Safety] Response was safety-filtered by the server.");
+        }
+
+      } catch (err) {
+        typingEl.remove();
+        // Remove the user message from history since the turn failed
+        conversationHistory.pop();
+        showError("⚠️ " + (err.message || "Could not connect to the server. Make sure app.py is running."));
+      } finally {
+        isLoading = false;
+        sendBtn.disabled = !inputEl.value.trim();
+        inputEl.disabled = false;
+        inputEl.focus();
+      }
+    }
+
+    /* ── Input handlers ─────────────────────────────────── */
+    inputEl.addEventListener("input", () => {
+      sendBtn.disabled = !inputEl.value.trim() || isLoading;
+      // Auto-resize textarea
+      inputEl.style.height = "auto";
+      inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + "px";
+    });
+
+    inputEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        if (!sendBtn.disabled) {
+          const text = inputEl.value;
+          inputEl.value = "";
+          inputEl.style.height = "auto";
+          sendBtn.disabled = true;
+          sendMessage(text);
+        }
+      }
+    });
+
+    sendBtn.addEventListener("click", () => {
+      const text = inputEl.value;
+      inputEl.value = "";
+      inputEl.style.height = "auto";
+      sendBtn.disabled = true;
+      sendMessage(text);
+    });
+
+    /* ── Example chip clicks ────────────────────────────── */
+    document.querySelectorAll(".chip").forEach(chip => {
+      chip.addEventListener("click", () => {
+        sendMessage(chip.textContent.replace(/^[\s\S]{1}/, "").trim());
+      });
+    });
+
+    /* ── Clear / New chat ───────────────────────────────── */
+    clearBtn.addEventListener("click", () => {
+      conversationHistory = [];
+      messagesEl.innerHTML = `
+        <div class="msg assistant">
+          <div class="msg-avatar" aria-hidden="true"><i class="ti ti-heart-rate-monitor"></i></div>
+          <div class="bubble">Hello again! Feel free to ask me anything about general health topics. Remember, I'm here to inform — not to replace your doctor. 🌿</div>
+        </div>`;
+      examplesArea.style.display = "";
+      errorArea.innerHTML = "";
+      inputEl.focus();
+    });
+  </script>
+
+</body>
+</html>
